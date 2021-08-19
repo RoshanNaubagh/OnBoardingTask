@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "mssql2": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/roshansqlserver/databases/BoardingTask1",
+      "type": "mssql.azure",
+      "connectionId": "ConnectionStrings:SqlConnection",
+      "secretStore": "AzureAppSettings"
+    }
+  }
+}
