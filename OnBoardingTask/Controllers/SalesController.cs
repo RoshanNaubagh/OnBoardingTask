@@ -77,10 +77,8 @@ namespace OnBoardingTask.Controllers
         [HttpPost]
         public async Task<ActionResult<Sale>> PostSale(Sale sale)
         {
-            var model = new Sale { ProductId=sale.ProductId
-                ,CustomerId=sale.CustomerId,StoreId=sale.StoreId,
-                DateSold = DateTime.Now };
-            _context.Sales.Add(model);
+            
+            _context.Sales.Add(sale);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetSale", new { id = sale.Id }, sale);

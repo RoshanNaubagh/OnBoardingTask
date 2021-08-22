@@ -3,20 +3,23 @@ import ReactDOM from "react-dom";
 import Axios from "axios";
 import { Link as RouterLink } from "react-router-dom";
 import { useHistory } from "react-router";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCheckSquare,
+  faCoffee,
+  faFileExcel,
+  faTrash,
+} from "@fortawesome/fontawesome-free-solid";
 import {
   Collapse,
-  Container,
   Navbar,
   NavbarBrand,
   NavbarToggler,
   NavItem,
   NavLink,
 } from "reactstrap";
-import { Button, ButtonToolbar } from "react-bootstrap";
 
-import { Table, Form } from "semantic-ui-react";
-
+import { Table, Form, Button, Icon, Modal, Container } from "semantic-ui-react";
 export class CustomerGet extends Component {
   constructor(props) {
     super(props);
@@ -30,7 +33,7 @@ export class CustomerGet extends Component {
         },
       ],
       loading: true,
-      showModal: false,
+      modalOpen: false,
     };
   }
 
@@ -53,11 +56,15 @@ export class CustomerGet extends Component {
     return (
       <>
         <div>
+          <div>
+            <CreateCustomer />
+          </div>
           <Table singleLine>
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Name</Table.HeaderCell>
                 <Table.HeaderCell>Address</Table.HeaderCell>
+                <Table.HeaderCell>Actions</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
 
@@ -66,33 +73,22 @@ export class CustomerGet extends Component {
                 <Table.Row key={c.id}>
                   <Table.Cell>{c.name} </Table.Cell>
                   <Table.Cell>{c.address}</Table.Cell>
-                  <RouterLink to = {`/Customer/Edit`}>
-              <Button onClick={()=>{
-                const id = c.id;
-                localStorage.setItem('id', id);
-              }}>Edit</Button>
-            </RouterLink>
-                  
-                  
-                  <Button
-                    onClick={() => {
-                      Axios.delete(`api/Customers/${c.id}`);
-                      this.setState({
-                        customers: this.state.customers.filter((f) => f.id !== c.id),
-                      });
-                    }}
-                  >
-                    Delete
+
+                  <Button basic>
+                    <UpdateCustomer />
+                  </Button>
+
+                  <Button basic>
+                    <DeleteCustomer
+                      id={c.id}
+                      name={c.name}
+                      address={c.address}
+                    />
                   </Button>
                 </Table.Row>
               ))}
             </Table.Body>
           </Table>
-          <div>
-            <RouterLink to="/Customer/Add">
-              <Button>Add Customer</Button>
-            </RouterLink>
-          </div>
         </div>
       </>
     );
@@ -102,20 +98,24 @@ export class UpdateCustomer extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      id:0,
+      id: 0,
       name: "",
       address: "",
+      open: false,
     };
-
   }
   getCustomerbyId(id) {
     Axios.get(`api/Customers/${id}`).then((res) => {
-      console.log('i am here');
-      this.setState({ id:res.data.id,name: res.data.name, address: res.data.address });
+      console.log("i am here");
+      this.setState({
+        id: res.data.id,
+        name: res.data.name,
+        address: res.data.address,
+      });
     });
   }
-  componentDidMount(){
-    const ids = localStorage.getItem('id');
+  componentDidMount() {
+    const ids = localStorage.getItem("id");
     console.log(ids);
     this.getCustomerbyId(ids);
   }
@@ -126,41 +126,118 @@ export class UpdateCustomer extends Component {
     });
   };
   handleSubmit = () => {
-    const ids = localStorage.getItem('id');
+    const ids = localStorage.getItem("id");
 
     Axios.put(`api/Customers/${ids}`, this.state)
       .then((res) => {
         console.log(res.data);
       })
       .then(() => {
-        this.props.history.push("/Customer");
+        // this.props.history.push("/Customer");]
+        this.setState({ open: false });
       });
   };
   render() {
     return (
       <div>
-        <Form onSubmit={this.handleSubmit}>
-          <Form.Field>
-            <label>Name</label>
-            <input
-              type="text"
-              name="name"
-              value={this.state.name}
-              onChange={this.updateState}
-            />
-          </Form.Field>
-          <Form.Field>
-            <label>Address</label>
-            <input
-              type="text"
-              name="address"
-              value={this.state.address}
-              onChange={this.updateState}
-            />
-          </Form.Field>
-          <Button type="submit">Submit</Button>
-        </Form>
+        <Modal
+          onClose={() => this.setState({ open: false })}
+          onOpen={() => this.setState({ open: true })}
+          open={this.state.open}
+          trigger={
+            <Button color="orange">
+              <Icon name="edit" />
+              EDIT
+            </Button>
+          }
+        >
+          <Modal.Header>Edit in the Customer Details</Modal.Header>
+          <Modal.Content>
+            <Form onSubmit={this.handleSubmit}>
+              <Form.Field>
+                <label>Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={this.state.name}
+                  onChange={this.updateState}
+                />
+              </Form.Field>
+              <Form.Field>
+                <label>Address</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={this.state.address}
+                  onChange={this.updateState}
+                />
+              </Form.Field>
+              <Button type="submit" color="green">Submit</Button>
+            </Form>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button
+              color="black"
+              onClick={() => this.setState({ open: false })}
+            >
+              Cancel
+            </Button>
+          </Modal.Actions>
+        </Modal>
       </div>
+    );
+  }
+}
+
+export class DeleteCustomer extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      open: false,
+    };
+  }
+
+  render() {
+    return (
+      <>
+        <Modal
+          onClose={() => this.setState({ open: false })}
+          onOpen={() => this.setState({ open: true })}
+          open={this.state.open}
+          trigger={
+            <Button color="red">
+              <FontAwesomeIcon icon={faTrash} />
+              &nbsp;DELETE
+            </Button>
+          }
+        >
+          <Modal.Header>Delete Customer</Modal.Header>
+          <Modal.Content>
+            <h1>
+              <b>Are you sure you want to delete?</b>
+            </h1>
+            <h2>Name: {this.props.name}</h2>
+            <h2>Address: {this.props.address}</h2>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button
+              color="black"
+              onClick={() => this.setState({ open: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              onClick={() => {
+                Axios.delete(`api/Customers/${this.props.id}`);
+              }}
+            >
+              Confirm
+            </Button>
+          </Modal.Actions>
+        </Modal>
+      </>
     );
   }
 }
@@ -174,6 +251,7 @@ export class CreateCustomer extends Component {
       id: 0,
       name: "",
       address: "",
+      open: false,
     };
   }
 
@@ -185,10 +263,8 @@ export class CreateCustomer extends Component {
         console.log(res.data);
       })
       .then(() => {
-        this.props.history.push("/Customer");
+        this.setState({ open: false });
       });
-
-    // e.preventDefault()
   };
 
   componentDidMount() {
@@ -205,18 +281,39 @@ export class CreateCustomer extends Component {
   render() {
     return (
       <>
-        <h1>Fill in the Customers Details</h1>
-        <Form onSubmit={this.handleSubmit}>
-          <Form.Field>
-            <label>Name</label>
-            <input type="text" name="name" onChange={this.updateState} />
-          </Form.Field>
-          <Form.Field>
-            <label>Address</label>
-            <input type="text" name="address" onChange={this.updateState} />
-          </Form.Field>
-          <Button type="submit">Submit</Button>
-        </Form>
+        <Modal
+          className={this.formStyles}
+          onClose={() => this.setState({ open: false })}
+          onOpen={() => this.setState({ open: true })}
+          open={this.state.open}
+          trigger={<Button color="green">Add Customer</Button>}
+          centered={false}
+        >
+          <Modal.Header>Fill in the Customer Details</Modal.Header>
+          <Modal.Content>
+            <Form onSubmit={this.handleSubmit} style={{ alignItems: "center" }}>
+              <Form.Field>
+                <label>Name</label>
+                <input type="text" name="name" onChange={this.updateState} />
+              </Form.Field>
+              <Form.Field>
+                <label>Address</label>
+                <input type="text" name="address" onChange={this.updateState} />
+              </Form.Field>
+              <Button color="green" type="submit">
+                Submit
+              </Button>
+            </Form>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button
+              color="black"
+              onClick={() => this.setState({ open: false })}
+            >
+              Cancel
+            </Button>
+          </Modal.Actions>
+        </Modal>
       </>
     );
   }

@@ -3,21 +3,25 @@ import ReactDOM from "react-dom";
 import Axios from "axios";
 import { Link as RouterLink } from "react-router-dom";
 import { useHistory } from "react-router";
-import dateFormat from "dateformat";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  Collapse,
+  faCheckSquare,
+  faCoffee,
+  faFileExcel,
+  faTrash,
+} from "@fortawesome/fontawesome-free-solid";
+import {
+  Table,
+  Form,
+  Button,
+  Icon,
+  Modal,
   Container,
-  Navbar,
-  NavbarBrand,
-  NavbarToggler,
-  NavItem,
-  NavLink,
-} from "reactstrap";
-import { Button, ButtonToolbar } from "react-bootstrap";
-import qs from "qs";
+  Input,
+  Select,
+} from "semantic-ui-react";
 
-import { Table, Form, Dropdown, Modal, Input } from "semantic-ui-react";
+import qs from "qs";
 
 export class SaleGet extends Component {
   constructor(props) {
@@ -44,6 +48,7 @@ export class SaleGet extends Component {
   render() {
     return (
       <>
+        <CreateSale />
         <Table singleLine>
           <Table.Header>
             <Table.Row>
@@ -53,6 +58,7 @@ export class SaleGet extends Component {
               <Table.HeaderCell>Product</Table.HeaderCell>
               <Table.HeaderCell>Store</Table.HeaderCell>
               <Table.HeaderCell>Date Sold</Table.HeaderCell>
+              <Table.HeaderCell>Actions</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
 
@@ -65,7 +71,7 @@ export class SaleGet extends Component {
                 <Table.Cell>{c.store.name}</Table.Cell>
                 <Table.Cell>{c.dateSold}</Table.Cell>
 
-                <RouterLink to={`/Sale/Edit`}>
+                {/* <RouterLink to={`/Sale/Edit`}>
                   <Button
                     onClick={() => {
                       const id = c.id;
@@ -74,27 +80,64 @@ export class SaleGet extends Component {
                   >
                     Edit
                   </Button>
-                </RouterLink>
+                </RouterLink> */}
+                <Button basic>
+                  <SaleUpdate id={c.id} />
+                </Button>
 
-                <Button
-                  onClick={() => {
-                    Axios.delete(`api/Sales/${c.id}`);
-                    this.setState({
-                      sales: this.state.sales.filter((f) => f.id !== c.id),
-                    });
-                  }}
-                >
-                  Delete
+                <Button basic>
+                  <SaleDelete id={c.id} />
                 </Button>
               </Table.Row>
             ))}
           </Table.Body>
         </Table>
-        <div>
-          <RouterLink to="/Sale/Add">
-            <Button>Add Sale</Button>
-          </RouterLink>
-        </div>
+      </>
+    );
+  }
+}
+
+export class SaleDelete extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      open: false,
+    };
+  }
+  render() {
+    return (
+      <>
+        <Modal
+          onOpen={() => this.setState({ open: true })}
+          onClose={() => this.setState({ open: false })}
+          open={this.state.open}
+          trigger={
+            <Button color="red">
+              <FontAwesomeIcon icon={faTrash} />
+              &nbsp;DELETE
+            </Button>
+          }
+        >
+          <Modal.Header>Delete Sale</Modal.Header>
+          <Modal.Content>Are you sure you want to Delete ?</Modal.Content>
+          <Modal.Actions>
+            <Button
+              color="black"
+              onClick={() => this.setState({ open: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              onClick={() => {
+                Axios.delete(`api/Sales/${this.props.id}`);
+                this.setState({ open: false });
+              }}
+            >
+              Delete
+            </Button>
+          </Modal.Actions>
+        </Modal>
       </>
     );
   }
@@ -112,11 +155,12 @@ export class SaleUpdate extends Component {
       customers: [],
       products: [],
       stores: [],
+      open: false,
     };
   }
 
   getSalebyId(id) {
-    Axios.get(`api/Sales/${id}`).then((res) => {
+    Axios.get(`api/Sales/${this.props.id}`).then((res) => {
       this.setState({
         id: id,
         customer: res.data.customerId,
@@ -154,14 +198,14 @@ export class SaleUpdate extends Component {
       customerId: this.state.customer,
       productId: this.state.product,
       storeId: this.state.store,
-      // dateSold: this.state.dateSold,
+      dateSold: this.state.dateSold,
     };
     Axios.put(`api/Sales/${this.state.id}`, data)
       .then((res) => {
         console.log(res.data);
       })
       .then(() => {
-        this.props.history.push("/Sale");
+        this.setState({ open: false });
       });
 
     // e.preventDefault()
@@ -169,56 +213,89 @@ export class SaleUpdate extends Component {
   render() {
     return (
       <>
-        <Form onSubmit={this.handleSubmit}>
-          <Form.Field>
-            <label>Choose a Customer:</label>
-            <select
-              name="customer"
-              value={this.state.customer}
-              onChange={this.myChangeHandler}
-            >
-              {this.state.customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Form.Field>
-          <Form.Field>
-            <label>Choose a Product:</label>
-            <select
-              name="product"
-              value={this.state.product}
-              onChange={this.myChangeHandler}
-            >
-              {this.state.products.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Form.Field>
-          <Form.Field>
-            <label>Choose a Store:</label>
-            <select
-              name="store"
-              value={this.state.store}
-              onChange={this.myChangeHandler}
-            >
-              {this.state.stores.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Form.Field>
-          <Form.Field value={this.state.dateSold}>
-            <label>{this.state.dateSold}</label>
-            
-          </Form.Field>
+        <Modal
+          onClose={() => this.setState({ open: false })}
+          onOpen={() => this.setState({ open: true })}
+          open={this.state.open}
+          trigger={
+            <Button color="orange">
+              <Icon name="edit" />
+              EDIT
+            </Button>
+          }
+        >
+          <Modal.Header>Edit your Sale Details</Modal.Header>
+          <Modal.Content>
+            <Form onSubmit={this.handleSubmit}>
+              <Form.Field>
+                <label>Choose a Customer:</label>
+                <select
+                  name="customer"
+                  value={this.state.customer}
+                  onChange={this.myChangeHandler}
+                >
+                  {this.state.customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Form.Field>
+              <Form.Field>
+                <label>Choose a Product:</label>
+                <select
+                  name="product"
+                  value={this.state.product}
+                  onChange={this.myChangeHandler}
+                >
+                  {this.state.products.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Form.Field>
+              <Form.Field>
+                <label>Choose a Store:</label>
+                <select
+                  name="store"
+                  value={this.state.store}
+                  onChange={this.myChangeHandler}
+                >
+                  {this.state.stores.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Form.Field>
+              <h5>Date Sold: {this.state.dateSold}</h5>
+              <Form.Field>
+                <label>Click to Change Sold Date</label>
+                <input
+                  name="dateSold"
+                  type="date"
+                  value={this.state.dateSold}
+                  onChange={this.myChangeHandler}
+                >
+                </input>
+                {/* <label>{this.state.dateSold}</label> */}
+              </Form.Field>
 
-          <Button type="submit">Submit</Button>
-        </Form>
+              <Button color="green" type="submit">
+                Submit
+              </Button>
+            </Form>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button
+              color="black"
+              onClick={() => this.setState({ open: false })}
+            >
+              Cancel
+            </Button>
+          </Modal.Actions>
+        </Modal>
       </>
     );
   }
@@ -237,6 +314,7 @@ export class CreateSale extends Component {
       customers: [],
       products: [],
       stores: [],
+      open: false,
     };
   }
 
@@ -271,7 +349,7 @@ export class CreateSale extends Component {
         console.log(res.data);
       })
       .then(() => {
-        this.props.history.push("/Sale");
+        this.setState({ open: false });
       });
 
     // e.preventDefault()
@@ -280,54 +358,80 @@ export class CreateSale extends Component {
   render() {
     return (
       <>
-        <h1>Fill in the Sales Details</h1>
-        <Form onSubmit={this.handleSubmit}>
-          <Form.Field>
-            <label>Choose a Customer:</label>
-            <select name="customer" onChange={this.myChangeHandler}>
-              <option value="" disabled selected>
-                Select your Customer
-              </option>
+        <Modal
+          onClose={() => this.setState({ open: false })}
+          onOpen={() => this.setState({ open: true })}
+          open={this.state.open}
+          trigger={<Button color="blue">Add Sale</Button>}
+        >
+          <Modal.Header>fill in your Sale Details</Modal.Header>
+          <Modal.Content>
+            <Form onSubmit={this.handleSubmit}>
+              <Form.Field>
+                <label>Choose a Customer:</label>
+                <select name="customer" onChange={this.myChangeHandler}>
+                  <option value="" disabled selected>
+                    Select the customer
+                  </option>
 
-              {this.state.customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Form.Field>
-          <Form.Field>
-            <label>Choose a Product:</label>
-            <select name="product" onChange={this.myChangeHandler}>
-              <option value="" disabled selected>
-                Select your Product
-              </option>
+                  {this.state.customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Form.Field>
+              <Form.Field>
+                <label>Choose a Product:</label>
+                <select name="product" onChange={this.myChangeHandler}>
+                  <option value="" disabled selected>
+                    Select the product
+                  </option>
 
-              {this.state.products.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Form.Field>
-          <Form.Field>
-            <label>Choose a Store:</label>
-            <select name="store" onChange={this.myChangeHandler}>
-              <option value="" disabled selected>
-                Select your Store
-              </option>
+                  {this.state.products.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Form.Field>
+              <Form.Field>
+                <label>Choose a Store:</label>
+                <select name="store" onChange={this.myChangeHandler}>
+                  <option value="" disabled selected>
+                    Select the store
+                  </option>
 
-              {this.state.stores.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Form.Field>
-          
+                  {this.state.stores.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Form.Field>
+              <Form.Field>
+                <label>Choose a Date</label>
+                <Input
+                  type="date"
+                  name="dateSold"
+                  onChange={this.myChangeHandler}
+                />
+              </Form.Field>
 
-          <Button type="submit">Submit</Button>
-        </Form>
+              <Button color="green" type="submit">
+                Submit
+              </Button>
+            </Form>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button
+              color="black"
+              onClick={() => this.setState({ open: false })}
+            >
+              Cancel
+            </Button>
+          </Modal.Actions>
+        </Modal>
       </>
     );
   }

@@ -7,8 +7,8 @@ export class Layout extends Component {
 
   render () {
     return (
-      <div>
-        <NavMenu />
+      <div style={{display:'block', marginLeft:'50px',marginRight:'50px'}}>
+        <NavMenu  />
         <Container>
           {this.props.children}
         </Container>
