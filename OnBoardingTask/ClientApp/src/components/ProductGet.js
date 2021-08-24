@@ -89,7 +89,7 @@ export class UpdateProduct extends Component {
     };
   }
   getProductbyId(id) {
-    Axios.get(`api/Products/${id}`).then((res) => {
+    Axios.get(`api/Products/${this.props.id}`).then((res) => {
       this.setState({
         id: res.data.id,
         name: res.data.name,
@@ -111,7 +111,7 @@ export class UpdateProduct extends Component {
   handleSubmit = () => {
     const ids = localStorage.getItem("id");
 
-    Axios.put(`api/Products/${ids}`, this.state)
+    Axios.put(`api/Products/${this.props.id}`, this.state)
       .then((res) => {
         console.log(res.data);
       })
@@ -193,7 +193,7 @@ export class CreateProduct extends Component {
         console.log(res.data);
       })
       .then(() => {
-        this.props.history.push("/Product");
+        this.setState({open:false})
       });
 
     // e.preventDefault()

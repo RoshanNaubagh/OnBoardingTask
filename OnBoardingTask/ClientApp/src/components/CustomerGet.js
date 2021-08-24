@@ -75,7 +75,7 @@ export class CustomerGet extends Component {
                   <Table.Cell>{c.address}</Table.Cell>
 
                   <Button basic>
-                    <UpdateCustomer />
+                    <UpdateCustomer id={c.id} />
                   </Button>
 
                   <Button basic>
@@ -105,7 +105,7 @@ export class UpdateCustomer extends Component {
     };
   }
   getCustomerbyId(id) {
-    Axios.get(`api/Customers/${id}`).then((res) => {
+    Axios.get(`api/Customers/${this.props.id}`).then((res) => {
       console.log("i am here");
       this.setState({
         id: res.data.id,
@@ -128,7 +128,7 @@ export class UpdateCustomer extends Component {
   handleSubmit = () => {
     const ids = localStorage.getItem("id");
 
-    Axios.put(`api/Customers/${ids}`, this.state)
+    Axios.put(`api/Customers/${this.props.id}`, this.state)
       .then((res) => {
         console.log(res.data);
       })
@@ -231,6 +231,8 @@ export class DeleteCustomer extends Component {
               color="red"
               onClick={() => {
                 Axios.delete(`api/Customers/${this.props.id}`);
+                this.setState({ open: false });
+
               }}
             >
               Confirm
